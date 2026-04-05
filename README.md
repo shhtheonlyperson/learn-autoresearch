@@ -1,17 +1,19 @@
 # Learn Autoresearch
 
-An interactive static website that explains what [`karpathy/autoresearch`](https://github.com/karpathy/autoresearch) is and how to use it step by step.
+An interactive Vite-powered site that explains what [`karpathy/autoresearch`](https://github.com/karpathy/autoresearch) is and how to use it step by step.
 
-## Run locally
+## Development
 
 ```bash
-python3 -m http.server 4321
+npm install
+npm run dev
 ```
 
-Then open [http://localhost:4321](http://localhost:4321).
+Then open the local URL printed by Vite.
 
-If you prefer an npm entrypoint:
+## Production build
 
 ```bash
-npm run dev
+npm run build
+npm run preview
 ```
