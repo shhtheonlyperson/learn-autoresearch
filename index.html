@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="An interactive learning site that explains karpathy/autoresearch and shows how to use it step by step."
+    />
+    <meta name="theme-color" content="#e6e3dc" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0d1013" media="(prefers-color-scheme: dark)" />
+    <title>Autoresearch, Explained</title>
+    <script>
+      (() => {
+        const normalizeLocale = (value) => {
+          if (!value) {
+            return null;
+          }
+
+          const normalized = String(value).toLowerCase().replace(/_/g, "-");
+
+          if (normalized === "en") {
+            return "en";
+          }
+
+          if (normalized === "zh-tw") {
+            return "zh-TW";
+          }
+
+          return null;
+        };
+
+        const isTraditionalChineseLocale = (value) => {
+          if (!value) {
+            return false;
+          }
+
+          const normalized = String(value).toLowerCase().replace(/_/g, "-");
+
+          return (
+            normalized === "zh-tw" ||
+            normalized.startsWith("zh-tw-") ||
+            normalized === "zh-hk" ||
+            normalized.startsWith("zh-hk-") ||
+            normalized === "zh-mo" ||
+            normalized.startsWith("zh-mo-") ||
+            normalized === "zh-hant" ||
+            normalized.startsWith("zh-hant-") ||
+            normalized.includes("-hant")
+          );
+        };
+
+        const searchParams = new URL(window.location.href).searchParams;
+        const override = normalizeLocale(searchParams.get("locale"));
+        const browserLocales = [navigator.language, ...(navigator.languages || [])].filter(Boolean);
+        const locale =
+          override || (browserLocales.some(isTraditionalChineseLocale) ? "zh-TW" : "en");
+        const theme =
+          window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches
+            ? "dark"
+            : "light";
+
+        document.documentElement.lang = locale === "zh-TW" ? "zh-Hant-TW" : "en";
+        document.documentElement.dataset.locale = locale;
+        document.documentElement.dataset.theme = theme;
+      })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="page-noise" aria-hidden="true"></div>
+    <header class="site-header">
+      <a class="brand" href="#top">
+        <span class="brand-mark">AR</span>
+        <span class="brand-copy">
+          <strong>Autoresearch</strong>
+          <small>Interactive field guide</small>
+        </span>
+      </a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="#what-it-is">What It Is</a>
+        <a href="#step-guide">Step Guide</a>
+        <a href="#simulator">Simulator</a>
+        <a href="#prompt-lab">Prompt Lab</a>
+      </nav>
+      <a
+        class="ghost-button"
+        href="https://github.com/karpathy/autoresearch"
+        target="_blank"
+        rel="noreferrer"
+      >
+        View repo
+      </a>
+    </header>
+
+    <main id="top">
+      <section class="hero reveal">
+        <div class="hero-copy">
+          <p class="eyebrow">A research-lab walkthrough for humans</p>
+          <h1>What <span>karpathy/autoresearch</span> is, and how to actually run it.</h1>
+          <p class="hero-text">
+            <code>autoresearch</code> is a tiny repo designed for autonomous model
+            experimentation: you prepare data once, let an agent edit
+            <code>train.py</code>, and compare every run on the same five-minute budget.
+          </p>
+          <div class="hero-actions">
+            <a class="primary-button" href="#step-guide">Start the guided tour</a>
+            <a class="secondary-button" href="#prompt-lab">Generate a starter prompt</a>
+          </div>
+          <div class="hero-note">
+            Built from the upstream
+            <a href="https://github.com/karpathy/autoresearch" target="_blank" rel="noreferrer">README</a>,
+            <a href="https://github.com/karpathy/autoresearch/blob/master/program.md" target="_blank" rel="noreferrer">program.md</a>,
+            <a href="https://github.com/karpathy/autoresearch/blob/master/train.py" target="_blank" rel="noreferrer">train.py</a>,
+            and
+            <a href="https://github.com/karpathy/autoresearch/blob/master/prepare.py" target="_blank" rel="noreferrer">prepare.py</a>.
+          </div>
+        </div>
+
+        <aside class="hero-panel">
+          <div class="panel-card signal-card">
+            <span class="chip">Core loop</span>
+            <strong>Agent edits one file</strong>
+            <p>
+              The repo stays intentionally small so experiments stay legible and
+              reviewable.
+            </p>
+          </div>
+          <div class="metric-grid">
+            <article class="metric-card">
+              <span class="metric-label">Hardware</span>
+              <strong>1 NVIDIA GPU</strong>
+              <p>Tested upstream on H100.</p>
+            </article>
+            <article class="metric-card">
+              <span class="metric-label">Runtime</span>
+              <strong>300 seconds</strong>
+              <p>Fixed wall-clock training budget.</p>
+            </article>
+            <article class="metric-card">
+              <span class="metric-label">Mutable code</span>
+              <strong><code>train.py</code></strong>
+              <p>The agent’s playground.</p>
+            </article>
+            <article class="metric-card">
+              <span class="metric-label">Score</span>
+              <strong><code>val_bpb</code></strong>
+              <p>Lower is better.</p>
+            </article>
+          </div>
+        </aside>
+      </section>
+
+      <section class="principles reveal" id="what-it-is">
+        <div class="section-heading">
+          <p class="eyebrow">The repo in one glance</p>
+          <h2>Autoresearch is less “framework” and more “tight experiment contract.”</h2>
+        </div>
+        <div class="principle-grid">
+          <article class="principle-card">
+            <span class="principle-index">01</span>
+            <h3>You program the research org in Markdown.</h3>
+            <p>
+              The human mostly shapes <code>program.md</code>: the rules, goals,
+              output format, and experiment loop that the coding agent follows.
+            </p>
+          </article>
+          <article class="principle-card">
+            <span class="principle-index">02</span>
+            <h3>The agent explores by editing only one file.</h3>
+            <p>
+              The entire architecture, optimizer setup, and training loop live in
+              <code>train.py</code>, so diffs stay focused and the search space stays understandable.
+            </p>
+          </article>
+          <article class="principle-card">
+            <span class="principle-index">03</span>
+            <h3>Every experiment gets the same clock.</h3>
+            <p>
+              Training is compared under the same five-minute budget, which makes
+              “keep or discard” decisions much more consistent.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section class="interactive reveal">
+        <div class="section-heading">
+          <p class="eyebrow">Interactive example 1</p>
+          <h2>Click a file to see who controls it and why it exists.</h2>
+        </div>
+        <div class="file-explorer">
+          <div class="file-tabs" role="tablist" aria-label="Autoresearch files">
+            <button class="file-tab is-active" data-file-tab="prepare">prepare.py</button>
+            <button class="file-tab" data-file-tab="train">train.py</button>
+            <button class="file-tab" data-file-tab="program">program.md</button>
+          </div>
+          <article class="file-detail" id="file-detail" aria-live="polite"></article>
+        </div>
+      </section>
+
+      <section class="guide reveal" id="step-guide">
+        <div class="section-heading">
+          <p class="eyebrow">Interactive example 2</p>
+          <h2>Walk through the workflow step by step.</h2>
+        </div>
+        <div class="guide-layout">
+          <div class="step-list" id="step-list" role="tablist" aria-label="Setup steps"></div>
+          <article class="step-panel" id="step-panel" aria-live="polite"></article>
+        </div>
+      </section>
+
+      <section class="simulator reveal" id="simulator">
+        <div class="section-heading">
+          <p class="eyebrow">Interactive example 3</p>
+          <h2>Simulate the keep-or-discard decision.</h2>
+        </div>
+        <div class="simulator-layout">
+          <form class="lab-form" id="decision-form">
+            <label>
+              Baseline <code>val_bpb</code>
+              <input type="number" step="0.000001" id="baseline-bpb" value="0.997900" />
+            </label>
+            <label>
+              New run <code>val_bpb</code>
+              <input type="number" step="0.000001" id="candidate-bpb" value="0.993200" />
+            </label>
+            <label>
+              Peak VRAM in MB
+              <input type="number" step="0.1" id="peak-vram" value="45260.2" />
+            </label>
+            <label>
+              Experiment note
+              <input type="text" id="experiment-note" value="raise matrix LR slightly" />
+            </label>
+            <label class="checkbox-row">
+              <input type="checkbox" id="run-crashed" />
+              Treat this run as a crash
+            </label>
+          </form>
+
+          <div class="decision-card" id="decision-card">
+            <div class="decision-header">
+              <span class="chip">results.tsv preview</span>
+              <button class="copy-button" data-copy-target="#results-preview">Copy row</button>
+            </div>
+            <pre id="results-preview"></pre>
+            <div class="decision-summary" id="decision-summary"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="prompt-lab reveal" id="prompt-lab">
+        <div class="section-heading">
+          <p class="eyebrow">Interactive example 4</p>
+          <h2>Generate a starter prompt for your coding agent.</h2>
+        </div>
+        <div class="prompt-layout">
+          <form class="lab-form" id="prompt-form">
+            <label>
+              Run tag
+              <input type="text" id="run-tag" value="apr5" />
+            </label>
+            <label>
+              Goal
+              <select id="goal-select">
+                <option value="setup">Do the setup correctly</option>
+                <option value="baseline">Get a clean baseline run</option>
+                <option value="throughput">Try a small optimization idea</option>
+                <option value="small-gpu">Adapt for a smaller machine</option>
+              </select>
+            </label>
+            <label>
+              Extra focus
+              <input
+                type="text"
+                id="extra-focus"
+                value="stay disciplined about only changing train.py"
+              />
+            </label>
+          </form>
+
+          <article class="prompt-card">
+            <div class="decision-header">
+              <span class="chip">Prompt output</span>
+              <button class="copy-button" data-copy-target="#prompt-output">Copy prompt</button>
+            </div>
+            <pre id="prompt-output"></pre>
+          </article>
+        </div>
+      </section>
+
+      <section class="reality reveal">
+        <div class="section-heading">
+          <p class="eyebrow">Practical notes</p>
+          <h2>What to remember before you try it for real.</h2>
+        </div>
+        <div class="reality-grid">
+          <article class="reality-card">
+            <h3>It is not a general-purpose training platform.</h3>
+            <p>
+              Upstream is optimized around a single-GPU, single-file, fixed-budget experiment loop.
+              That simplicity is the point.
+            </p>
+          </article>
+          <article class="reality-card">
+            <h3>Smaller hardware usually needs retuning.</h3>
+            <p>
+              The README suggests reducing vocabulary size, sequence length, depth,
+              eval tokens, and batch size when you move far below the tested H100 setup.
+            </p>
+          </article>
+          <article class="reality-card">
+            <h3>Fairness comes from the budget, not identical hardware.</h3>
+            <p>
+              Five minutes makes changes comparable on one machine, but results are still
+              not directly portable across every GPU or platform.
+            </p>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>Autoresearch, Explained</p>
+      <p>
+        Source:
+        <a href="https://github.com/karpathy/autoresearch" target="_blank" rel="noreferrer">karpathy/autoresearch</a>
+      </p>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>

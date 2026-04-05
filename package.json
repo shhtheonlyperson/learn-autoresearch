@@ -1,0 +1,10 @@
+{
+  "name": "learn-autoresearch",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Interactive learning site for karpathy/autoresearch",
+  "scripts": {
+    "dev": "python3 -m http.server 4321",
+    "start": "python3 -m http.server 4321"
+  }
+}
