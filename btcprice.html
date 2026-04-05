@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta
+      name="description"
+      content="A curated interactive demo of BTCautoresearch: autonomous formula discovery for Bitcoin price prediction."
+    />
+    <meta name="theme-color" content="#f3ebda" />
+    <title>BTC Price Autoresearch Demo</title>
+    <script>
+      (() => {
+        const THEME_COLORS = {
+          light: "#f3ebda",
+          dark: "#101217",
+        };
+
+        const theme =
+          window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches
+            ? "dark"
+            : "light";
+
+        document.documentElement.lang = "en";
+        document.documentElement.dataset.theme = theme;
+
+        const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+
+        if (themeColorMeta) {
+          themeColorMeta.content = THEME_COLORS[theme];
+        }
+      })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/btcprice.css" />
+  </head>
+  <body>
+    <div class="page-grid" aria-hidden="true"></div>
+    <header class="site-header">
+      <a class="brand" href="#top">
+        <span class="brand-mark">B</span>
+        <span class="brand-copy">
+          <strong>BTC Autoresearch</strong>
+          <small>Curated demo</small>
+        </span>
+      </a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="#contract">Contract</a>
+        <a href="#evaluation">Harness</a>
+        <a href="#replay">Replay</a>
+        <a href="#simulator">Simulator</a>
+        <a href="#prompt-lab">Prompt Lab</a>
+      </nav>
+      <div class="header-actions">
+        <a class="ghost-link" href="/">Back to overview</a>
+        <a
+          class="ghost-link"
+          href="https://github.com/CBaquero/BTCautoresearch"
+          target="_blank"
+          rel="noreferrer"
+        >
+          View BTC repo
+        </a>
+      </div>
+    </header>
+
+    <main id="top">
+      <section class="hero reveal">
+        <div class="hero-copy">
+          <p class="eyebrow" id="hero-eyebrow"></p>
+          <h1 id="hero-title"></h1>
+          <p class="hero-text" id="hero-text"></p>
+          <div class="hero-actions">
+            <a class="primary-button" href="#replay" id="hero-primary"></a>
+            <a class="secondary-button" href="#prompt-lab" id="hero-secondary"></a>
+          </div>
+          <p class="hero-note" id="hero-note"></p>
+        </div>
+
+        <aside class="hero-panel">
+          <article class="signal-card" id="signal-card"></article>
+          <div class="hero-stats" id="hero-stats"></div>
+        </aside>
+      </section>
+
+      <section class="section-card reveal" id="contract">
+        <div class="section-heading">
+          <p class="eyebrow" id="contract-eyebrow"></p>
+          <h2 id="contract-title"></h2>
+        </div>
+        <div class="contract-grid" id="contract-grid"></div>
+      </section>
+
+      <section class="section-card reveal" id="evaluation">
+        <div class="section-heading">
+          <p class="eyebrow" id="evaluation-eyebrow"></p>
+          <h2 id="evaluation-title"></h2>
+        </div>
+        <div class="evaluation-layout">
+          <article class="evaluation-summary" id="evaluation-summary"></article>
+          <article class="evaluation-visual">
+            <div class="track-block">
+              <div class="track-header">
+                <strong id="split-title"></strong>
+                <span id="split-caption"></span>
+              </div>
+              <div class="split-badges" id="split-badges"></div>
+            </div>
+            <div class="track-block">
+              <div class="track-header">
+                <strong id="horizon-title"></strong>
+                <span id="horizon-caption"></span>
+              </div>
+              <div class="horizon-badges" id="horizon-badges"></div>
+            </div>
+            <div class="protocol-callout" id="protocol-callout"></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section-card reveal" id="replay">
+        <div class="section-heading">
+          <p class="eyebrow" id="replay-eyebrow"></p>
+          <h2 id="replay-title"></h2>
+        </div>
+        <div class="replay-layout">
+          <div class="phase-list" id="phase-list" role="tablist" aria-label="Replay phases"></div>
+          <article class="phase-detail" id="phase-detail" aria-live="polite"></article>
+        </div>
+      </section>
+
+      <section class="section-card reveal" id="finding">
+        <div class="section-heading">
+          <p class="eyebrow" id="finding-eyebrow"></p>
+          <h2 id="finding-title"></h2>
+        </div>
+        <div class="finding-layout">
+          <article class="finding-copy" id="finding-copy"></article>
+          <article class="finding-code-card">
+            <div class="card-header">
+              <span class="chip" id="finding-code-label"></span>
+              <button
+                class="copy-button"
+                data-copy-target="#finding-code"
+                data-copy-label="Copy block"
+              >
+                Copy block
+              </button>
+            </div>
+            <pre id="finding-code"></pre>
+          </article>
+        </div>
+      </section>
+
+      <section class="section-card reveal" id="simulator">
+        <div class="section-heading">
+          <p class="eyebrow" id="simulator-eyebrow"></p>
+          <h2 id="simulator-title"></h2>
+        </div>
+        <div class="simulator-layout">
+          <form class="lab-form" id="decision-form">
+            <label>
+              <span>Baseline <code>mean_rmse</code></span>
+              <input type="number" step="0.000001" id="baseline-rmse" value="0.267000" />
+            </label>
+            <label>
+              <span>Candidate <code>mean_rmse</code></span>
+              <input type="number" step="0.000001" id="candidate-rmse" value="0.171000" />
+            </label>
+            <label>
+              <span>Experiment note</span>
+              <input type="text" id="experiment-note" value="add decaying residual term" />
+            </label>
+            <label class="checkbox-row">
+              <input type="checkbox" id="run-crashed" />
+              <span>Treat this run as a crash</span>
+            </label>
+          </form>
+
+          <article class="decision-card">
+            <div class="card-header">
+              <span class="chip" id="results-chip"></span>
+              <button
+                class="copy-button"
+                data-copy-target="#results-preview"
+                data-copy-label="Copy row"
+              >
+                Copy row
+              </button>
+            </div>
+            <pre id="results-preview"></pre>
+            <div class="decision-summary" id="decision-summary"></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section-card reveal" id="prompt-lab">
+        <div class="section-heading">
+          <p class="eyebrow" id="prompt-eyebrow"></p>
+          <h2 id="prompt-title"></h2>
+        </div>
+        <div class="prompt-layout">
+          <form class="lab-form" id="prompt-form">
+            <label>
+              <span>Run tag</span>
+              <input type="text" id="run-tag" value="btc-apr5" />
+            </label>
+            <label>
+              <span>Goal</span>
+              <select id="goal-select">
+                <option value="setup">Set up the loop correctly</option>
+                <option value="baseline">Record the untouched baseline</option>
+                <option value="next">Run one new fit.py idea</option>
+              </select>
+            </label>
+            <label>
+              <span>Extra focus</span>
+              <input type="text" id="extra-focus" value="keep the diff small and only touch fit.py" />
+            </label>
+          </form>
+
+          <article class="prompt-card">
+            <div class="card-header">
+              <span class="chip" id="prompt-chip"></span>
+              <button
+                class="copy-button"
+                data-copy-target="#prompt-output"
+                data-copy-label="Copy prompt"
+              >
+                Copy prompt
+              </button>
+            </div>
+            <pre id="prompt-output"></pre>
+          </article>
+        </div>
+      </section>
+
+      <section class="section-card reveal" id="sources">
+        <div class="section-heading">
+          <p class="eyebrow" id="sources-eyebrow"></p>
+          <h2 id="sources-title"></h2>
+        </div>
+        <div class="source-grid" id="source-grid"></div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p id="footer-title"></p>
+      <p id="footer-source"></p>
+    </footer>
+
+    <script type="module" src="/btcprice.js"></script>
+  </body>
+</html>
