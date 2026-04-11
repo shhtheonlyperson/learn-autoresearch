@@ -7,11 +7,20 @@
       name="description"
       content="An interactive learning site that explains karpathy/autoresearch and shows how to use it step by step."
     />
-    <meta name="theme-color" content="#e6e3dc" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#0d1013" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#e6e3dc" />
     <title>Autoresearch, Explained</title>
     <script>
       (() => {
+        const STORAGE_KEYS = {
+          locale: "learn-autoresearch-locale",
+          theme: "learn-autoresearch-theme",
+        };
+
+        const THEME_COLORS = {
+          light: "#e6e3dc",
+          dark: "#0d1013",
+        };
+
         const normalizeLocale = (value) => {
           if (!value) {
             return null;
@@ -25,6 +34,20 @@
 
           if (normalized === "zh-tw") {
             return "zh-TW";
+          }
+
+          return null;
+        };
+
+        const normalizeThemePreference = (value) => {
+          if (!value) {
+            return null;
+          }
+
+          const normalized = String(value).toLowerCase();
+
+          if (normalized === "light" || normalized === "dark" || normalized === "system") {
+            return normalized;
           }
 
           return null;
@@ -50,19 +73,41 @@
           );
         };
 
+        let storedLocale = null;
+        let storedTheme = null;
+
+        try {
+          storedLocale = normalizeLocale(window.localStorage.getItem(STORAGE_KEYS.locale));
+          storedTheme = normalizeThemePreference(window.localStorage.getItem(STORAGE_KEYS.theme));
+        } catch (error) {
+          storedLocale = null;
+          storedTheme = null;
+        }
+
         const searchParams = new URL(window.location.href).searchParams;
         const override = normalizeLocale(searchParams.get("locale"));
         const browserLocales = [navigator.language, ...(navigator.languages || [])].filter(Boolean);
         const locale =
-          override || (browserLocales.some(isTraditionalChineseLocale) ? "zh-TW" : "en");
+          override || storedLocale || (browserLocales.some(isTraditionalChineseLocale) ? "zh-TW" : "en");
+        const themePreference = storedTheme || "system";
         const theme =
-          window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches
-            ? "dark"
-            : "light";
+          themePreference === "system"
+            ? window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches
+              ? "dark"
+              : "light"
+            : themePreference;
+
+        const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+
+        if (themeColorMeta) {
+          themeColorMeta.content = THEME_COLORS[theme];
+        }
 
         document.documentElement.lang = locale === "zh-TW" ? "zh-Hant-TW" : "en";
         document.documentElement.dataset.locale = locale;
+        document.documentElement.dataset.localePreference = override || storedLocale || "auto";
         document.documentElement.dataset.theme = theme;
+        document.documentElement.dataset.themePreference = themePreference;
       })();
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -89,14 +134,20 @@
         <a href="#simulator">Simulator</a>
         <a href="#prompt-lab">Prompt Lab</a>
       </nav>
-      <a
-        class="ghost-button"
-        href="https://github.com/karpathy/autoresearch"
-        target="_blank"
-        rel="noreferrer"
-      >
-        View repo
-      </a>
+      <div class="header-actions">
+        <div class="preference-controls" aria-label="Preferences">
+          <div class="preference-group" id="locale-controls"></div>
+          <div class="preference-group" id="theme-controls"></div>
+        </div>
+        <a
+          class="ghost-button"
+          href="https://github.com/karpathy/autoresearch"
+          target="_blank"
+          rel="noreferrer"
+        >
+          View repo
+        </a>
+      </div>
     </header>
 
     <main id="top">

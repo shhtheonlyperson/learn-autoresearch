@@ -3,9 +3,31 @@ const LOCALE_KEYS = {
   ZH_TW: "zh-TW",
 };
 
+const LOCALE_PREFERENCE_KEYS = {
+  AUTO: "auto",
+  EN: LOCALE_KEYS.EN,
+  ZH_TW: LOCALE_KEYS.ZH_TW,
+};
+
 const THEME_KEYS = {
   LIGHT: "light",
   DARK: "dark",
+};
+
+const THEME_PREFERENCE_KEYS = {
+  SYSTEM: "system",
+  LIGHT: THEME_KEYS.LIGHT,
+  DARK: THEME_KEYS.DARK,
+};
+
+const STORAGE_KEYS = {
+  locale: "learn-autoresearch-locale",
+  theme: "learn-autoresearch-theme",
+};
+
+const THEME_COLORS = {
+  [THEME_KEYS.LIGHT]: "#e6e3dc",
+  [THEME_KEYS.DARK]: "#0d1013",
 };
 
 const STATUS_VALUES = {
@@ -32,6 +54,7 @@ const localeContent = {
       simulator: "Simulator",
       promptLab: "Prompt Lab",
       viewRepo: "View repo",
+      preferences: "Preferences",
     },
     hero: {
       eyebrow: "A research-lab walkthrough for humans",
@@ -161,6 +184,20 @@ const localeContent = {
       next: "Next step",
       copied: "Copied",
       copyFailed: "Copy failed",
+    },
+    controls: {
+      localeLabel: "Locale",
+      themeLabel: "Theme",
+      localeOptions: {
+        auto: "Auto",
+        en: "EN",
+        "zh-TW": "繁",
+      },
+      themeOptions: {
+        system: "Auto",
+        light: "Light",
+        dark: "Dark",
+      },
     },
     decision: {
       statusLabels: {
@@ -404,6 +441,7 @@ grep "^val_bpb:\\|^peak_vram_mb:" run.log
       simulator: "模擬器",
       promptLab: "提示詞",
       viewRepo: "看原始 repo",
+      preferences: "偏好設定",
     },
     hero: {
       eyebrow: "給人類研究員的互動導覽",
@@ -533,6 +571,20 @@ grep "^val_bpb:\\|^peak_vram_mb:" run.log
       next: "下一步",
       copied: "已複製",
       copyFailed: "複製失敗",
+    },
+    controls: {
+      localeLabel: "語言",
+      themeLabel: "主題",
+      localeOptions: {
+        auto: "自動",
+        en: "EN",
+        "zh-TW": "繁",
+      },
+      themeOptions: {
+        system: "自動",
+        light: "亮",
+        dark: "暗",
+      },
     },
     decision: {
       statusLabels: {
@@ -758,9 +810,18 @@ grep "^val_bpb:\\|^peak_vram_mb:" run.log
   },
 };
 
+const initialLocalePreference = detectLocalePreference();
+const initialThemePreference = detectThemePreference();
+
 const state = {
-  locale: detectLocale(),
-  theme: detectTheme(),
+  localePreference: initialLocalePreference,
+  locale: detectLocale() || (initialLocalePreference === LOCALE_PREFERENCE_KEYS.AUTO
+    ? getSystemLocale()
+    : initialLocalePreference),
+  themePreference: initialThemePreference,
+  theme: detectTheme() || (initialThemePreference === THEME_PREFERENCE_KEYS.SYSTEM
+    ? getSystemTheme()
+    : initialThemePreference),
   activeFile: "prepare",
   activeStepIndex: 0,
 };
@@ -769,6 +830,9 @@ const metaDescriptionEl = document.querySelector('meta[name="description"]');
 const brandTitleEl = document.querySelector(".brand-copy strong");
 const brandSubtitleEl = document.querySelector(".brand-copy small");
 const siteNavEl = document.querySelector(".site-nav");
+const preferenceControlsEl = document.querySelector(".preference-controls");
+const localeControlsEl = document.querySelector("#locale-controls");
+const themeControlsEl = document.querySelector("#theme-controls");
 const repoButtonEl = document.querySelector(".ghost-button");
 const heroEyebrowEl = document.querySelector(".hero-copy .eyebrow");
 const heroTitleEl = document.querySelector(".hero-copy h1");
@@ -805,6 +869,7 @@ const promptChipEl = document.querySelector("#prompt-lab .prompt-card .chip");
 const promptCopyButtonEl = document.querySelector('[data-copy-target="#prompt-output"]');
 const promptOutputEl = document.querySelector("#prompt-output");
 const footerParagraphEls = [...document.querySelectorAll(".site-footer p")];
+const themeColorMetaEl = document.querySelector('meta[name="theme-color"]');
 
 function normalizeLocale(value) {
   if (!value) {
@@ -822,6 +887,27 @@ function normalizeLocale(value) {
   }
 
   return null;
+}
+
+function getStoredValue(key) {
+  try {
+    return window.localStorage.getItem(key);
+  } catch (error) {
+    return null;
+  }
+}
+
+function setStoredValue(key, value) {
+  try {
+    if (value === null) {
+      window.localStorage.removeItem(key);
+      return;
+    }
+
+    window.localStorage.setItem(key, value);
+  } catch (error) {
+    // Ignore storage failures and continue with in-memory state.
+  }
 }
 
 function isTraditionalChineseLocale(value) {
@@ -844,11 +930,36 @@ function isTraditionalChineseLocale(value) {
   );
 }
 
-function detectLocale() {
-  const bootstrappedLocale = normalizeLocale(document.documentElement.dataset.locale);
+function getSystemLocale() {
+  const languages = [navigator.language, ...(navigator.languages || [])].filter(Boolean);
+  const prefersTraditionalChinese = languages.some(isTraditionalChineseLocale);
 
-  if (bootstrappedLocale) {
-    return bootstrappedLocale;
+  return prefersTraditionalChinese ? LOCALE_KEYS.ZH_TW : LOCALE_KEYS.EN;
+}
+
+function resolveLocale(preference) {
+  return preference === LOCALE_PREFERENCE_KEYS.AUTO ? getSystemLocale() : preference;
+}
+
+function normalizeLocalePreference(value) {
+  if (!value) {
+    return null;
+  }
+
+  if (value === LOCALE_PREFERENCE_KEYS.AUTO) {
+    return LOCALE_PREFERENCE_KEYS.AUTO;
+  }
+
+  return normalizeLocale(value);
+}
+
+function detectLocalePreference() {
+  const bootstrappedPreference = normalizeLocalePreference(
+    document.documentElement.dataset.localePreference,
+  );
+
+  if (bootstrappedPreference) {
+    return bootstrappedPreference;
   }
 
   const url = new URL(window.location.href);
@@ -858,10 +969,17 @@ function detectLocale() {
     return override;
   }
 
-  const languages = [navigator.language, ...(navigator.languages || [])].filter(Boolean);
-  const prefersTraditionalChinese = languages.some(isTraditionalChineseLocale);
+  return normalizeLocalePreference(getStoredValue(STORAGE_KEYS.locale)) || LOCALE_PREFERENCE_KEYS.AUTO;
+}
 
-  return prefersTraditionalChinese ? LOCALE_KEYS.ZH_TW : LOCALE_KEYS.EN;
+function detectLocale() {
+  const bootstrappedLocale = normalizeLocale(document.documentElement.dataset.locale);
+
+  if (bootstrappedLocale) {
+    return bootstrappedLocale;
+  }
+
+  return resolveLocale(detectLocalePreference());
 }
 
 function normalizeTheme(value) {
@@ -872,13 +990,15 @@ function normalizeTheme(value) {
   return null;
 }
 
-function detectTheme() {
-  const bootstrappedTheme = normalizeTheme(document.documentElement.dataset.theme);
-
-  if (bootstrappedTheme) {
-    return bootstrappedTheme;
+function normalizeThemePreference(value) {
+  if (value === THEME_PREFERENCE_KEYS.SYSTEM) {
+    return THEME_PREFERENCE_KEYS.SYSTEM;
   }
 
+  return normalizeTheme(value);
+}
+
+function getSystemTheme() {
   if (!window.matchMedia) {
     return THEME_KEYS.LIGHT;
   }
@@ -888,11 +1008,39 @@ function detectTheme() {
     : THEME_KEYS.LIGHT;
 }
 
+function resolveTheme(preference) {
+  return preference === THEME_PREFERENCE_KEYS.SYSTEM ? getSystemTheme() : preference;
+}
+
+function detectThemePreference() {
+  const bootstrappedPreference = normalizeThemePreference(
+    document.documentElement.dataset.themePreference,
+  );
+
+  if (bootstrappedPreference) {
+    return bootstrappedPreference;
+  }
+
+  return normalizeThemePreference(getStoredValue(STORAGE_KEYS.theme)) || THEME_PREFERENCE_KEYS.SYSTEM;
+}
+
+function detectTheme() {
+  const bootstrappedTheme = normalizeTheme(document.documentElement.dataset.theme);
+
+  if (bootstrappedTheme) {
+    return bootstrappedTheme;
+  }
+
+  return resolveTheme(detectThemePreference());
+}
+
 function applyTheme(theme = detectTheme()) {
   const resolvedTheme = normalizeTheme(theme) || THEME_KEYS.LIGHT;
 
   state.theme = resolvedTheme;
   document.documentElement.dataset.theme = resolvedTheme;
+  document.documentElement.dataset.themePreference = state.themePreference;
+  themeColorMetaEl?.setAttribute("content", THEME_COLORS[resolvedTheme]);
 }
 
 function setupThemeWatcher() {
@@ -902,6 +1050,10 @@ function setupThemeWatcher() {
 
   const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
   const handleThemeChange = (event) => {
+    if (state.themePreference !== THEME_PREFERENCE_KEYS.SYSTEM) {
+      return;
+    }
+
     applyTheme(event.matches ? THEME_KEYS.DARK : THEME_KEYS.LIGHT);
   };
 
@@ -947,6 +1099,144 @@ function setHtml(element, value) {
   if (element) {
     element.innerHTML = value;
   }
+}
+
+function renderPreferenceGroup({ element, label, name, options, activeValue }) {
+  if (!element) {
+    return;
+  }
+
+  element.innerHTML = `
+    <span class="preference-label">${label}</span>
+    <div class="preference-buttons" role="group" aria-label="${label}">
+      ${options
+        .map(
+          ({ value, label: optionLabel }) => `
+            <button
+              type="button"
+              class="preference-toggle ${value === activeValue ? "is-active" : ""}"
+              data-preference-name="${name}"
+              data-preference-value="${value}"
+              aria-pressed="${value === activeValue}"
+            >
+              ${optionLabel}
+            </button>
+          `,
+        )
+        .join("")}
+    </div>
+  `;
+}
+
+function renderPreferenceControls(content) {
+  preferenceControlsEl?.setAttribute("aria-label", content.nav.preferences);
+
+  renderPreferenceGroup({
+    element: localeControlsEl,
+    label: content.controls.localeLabel,
+    name: "locale",
+    activeValue: state.localePreference,
+    options: [
+      {
+        value: LOCALE_PREFERENCE_KEYS.AUTO,
+        label: content.controls.localeOptions.auto,
+      },
+      {
+        value: LOCALE_PREFERENCE_KEYS.EN,
+        label: content.controls.localeOptions.en,
+      },
+      {
+        value: LOCALE_PREFERENCE_KEYS.ZH_TW,
+        label: content.controls.localeOptions[LOCALE_PREFERENCE_KEYS.ZH_TW],
+      },
+    ],
+  });
+
+  renderPreferenceGroup({
+    element: themeControlsEl,
+    label: content.controls.themeLabel,
+    name: "theme",
+    activeValue: state.themePreference,
+    options: [
+      {
+        value: THEME_PREFERENCE_KEYS.SYSTEM,
+        label: content.controls.themeOptions.system,
+      },
+      {
+        value: THEME_PREFERENCE_KEYS.LIGHT,
+        label: content.controls.themeOptions.light,
+      },
+      {
+        value: THEME_PREFERENCE_KEYS.DARK,
+        label: content.controls.themeOptions.dark,
+      },
+    ],
+  });
+}
+
+function refreshAllContent() {
+  state.locale = detectLocale();
+  renderStaticContent();
+  renderFile(state.activeFile);
+  renderSteps();
+  formatDecision();
+  renderPrompt();
+}
+
+function setLocalePreference(preference) {
+  const normalizedPreference = normalizeLocalePreference(preference) || LOCALE_PREFERENCE_KEYS.AUTO;
+
+  state.localePreference = normalizedPreference;
+  document.documentElement.dataset.localePreference = normalizedPreference;
+
+  if (normalizedPreference === LOCALE_PREFERENCE_KEYS.AUTO) {
+    setStoredValue(STORAGE_KEYS.locale, null);
+  } else {
+    setStoredValue(STORAGE_KEYS.locale, normalizedPreference);
+  }
+
+  refreshAllContent();
+}
+
+function setThemePreference(preference) {
+  const normalizedPreference = normalizeThemePreference(preference) || THEME_PREFERENCE_KEYS.SYSTEM;
+  const resolvedTheme =
+    normalizedPreference === THEME_PREFERENCE_KEYS.SYSTEM
+      ? getSystemTheme()
+      : normalizedPreference;
+
+  state.themePreference = normalizedPreference;
+  document.documentElement.dataset.themePreference = normalizedPreference;
+
+  if (normalizedPreference === THEME_PREFERENCE_KEYS.SYSTEM) {
+    setStoredValue(STORAGE_KEYS.theme, null);
+  } else {
+    setStoredValue(STORAGE_KEYS.theme, normalizedPreference);
+  }
+
+  applyTheme(resolvedTheme);
+  renderPreferenceControls(getContent());
+}
+
+function setupPreferenceControls() {
+  preferenceControlsEl?.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-preference-name]");
+
+    if (!button) {
+      return;
+    }
+
+    const { preferenceName, preferenceValue } = button.dataset;
+
+    if (preferenceName === "locale") {
+      setLocalePreference(preferenceValue);
+      return;
+    }
+
+    if (preferenceName === "theme") {
+      setThemePreference(preferenceValue);
+    }
+  });
 }
 
 function renderMetricGrid(content) {
@@ -1117,6 +1407,7 @@ function renderStaticContent() {
     "aria-label",
     content.htmlLang.startsWith("zh") ? "主要導覽" : "Primary",
   );
+  renderPreferenceControls(content);
   setText(repoButtonEl, content.nav.viewRepo);
 
   setText(heroEyebrowEl, content.hero.eyebrow);
@@ -1398,5 +1689,6 @@ renderSteps();
 formatDecision();
 renderPrompt();
 setupCopyButtons();
+setupPreferenceControls();
 setupRevealObserver();
 setupThemeWatcher();

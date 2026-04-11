@@ -277,6 +277,71 @@ pre {
   justify-content: center;
 }
 
+.header-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.preference-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.preference-group {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.preference-label {
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: right;
+}
+
+.preference-buttons {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.18rem;
+  gap: 0.18rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--button-bg);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+.preference-toggle {
+  appearance: none;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  padding: 0.45rem 0.68rem;
+  cursor: pointer;
+  font-size: 0.74rem;
+  font-weight: 600;
+  line-height: 1;
+  transition: background 180ms ease, color 180ms ease, transform 180ms ease;
+}
+
+.preference-toggle:hover {
+  transform: translateY(-1px);
+  color: var(--ink);
+}
+
+.preference-toggle.is-active {
+  background: var(--tab-active-bg);
+  color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--tab-active-border);
+}
+
 .site-nav a,
 .ghost-button,
 .secondary-button,
@@ -900,6 +965,18 @@ select:focus-visible {
     justify-content: center;
   }
 
+  .header-actions {
+    justify-content: center;
+  }
+
+  .preference-controls {
+    justify-content: center;
+  }
+
+  .preference-label {
+    text-align: center;
+  }
+
   .hero,
   .guide-layout,
   .simulator-layout,
@@ -928,6 +1005,20 @@ select:focus-visible {
 
   .site-nav {
     display: none;
+  }
+
+  .header-actions,
+  .preference-controls {
+    width: 100%;
+  }
+
+  .preference-group {
+    flex: 1 1 auto;
+  }
+
+  .preference-buttons {
+    width: 100%;
+    justify-content: center;
   }
 
   .hero,
