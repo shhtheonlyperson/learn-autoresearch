@@ -63,6 +63,7 @@ const localeContent = {
         "<code>autoresearch</code> is a tiny repo designed for autonomous model experimentation: you prepare data once, let an agent edit <code>train.py</code>, and compare every run on the same five-minute budget.",
       primaryCta: "Start the guided tour",
       secondaryCta: "Generate a starter prompt",
+      demoCta: "See the BTC price demo",
       noteHtml:
         'Built from the upstream <a href="https://github.com/karpathy/autoresearch" target="_blank" rel="noreferrer">README</a>, <a href="https://github.com/karpathy/autoresearch/blob/master/program.md" target="_blank" rel="noreferrer">program.md</a>, <a href="https://github.com/karpathy/autoresearch/blob/master/train.py" target="_blank" rel="noreferrer">train.py</a>, and <a href="https://github.com/karpathy/autoresearch/blob/master/prepare.py" target="_blank" rel="noreferrer">prepare.py</a>.',
     },
@@ -450,6 +451,7 @@ grep "^val_bpb:\\|^peak_vram_mb:" run.log
         "<code>autoresearch</code> 是一個刻意做得很小的 repo，用來跑自治模型實驗：先做一次資料準備，再讓 agent 改 <code>train.py</code>，並用相同的五分鐘預算比較每次結果。",
       primaryCta: "開始導覽",
       secondaryCta: "產生起手 prompt",
+      demoCta: "看看 BTC 價格 demo",
       noteHtml:
         '內容整理自上游 <a href="https://github.com/karpathy/autoresearch" target="_blank" rel="noreferrer">README</a>、<a href="https://github.com/karpathy/autoresearch/blob/master/program.md" target="_blank" rel="noreferrer">program.md</a>、<a href="https://github.com/karpathy/autoresearch/blob/master/train.py" target="_blank" rel="noreferrer">train.py</a> 與 <a href="https://github.com/karpathy/autoresearch/blob/master/prepare.py" target="_blank" rel="noreferrer">prepare.py</a>。',
     },
@@ -1415,6 +1417,7 @@ function renderStaticContent() {
   setHtml(heroTextEl, content.hero.textHtml);
   setText(heroActionEls[0], content.hero.primaryCta);
   setText(heroActionEls[1], content.hero.secondaryCta);
+  setText(heroActionEls[2], content.hero.demoCta);
   setHtml(heroNoteEl, content.hero.noteHtml);
 
   signalCardEl.innerHTML = `
